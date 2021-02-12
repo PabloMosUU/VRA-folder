@@ -35,7 +35,7 @@ class Metrics:
     #make list with fpr scores for each threshold
     def fpr_curve(self):
         fpr_list = []
-
+        
         for thres in self.probabilities_set:
             preds = self.make_predictions(thres)
             tp, tn, fp, fn = self.confusion_matrix(preds)
@@ -45,7 +45,7 @@ class Metrics:
     
     def tpr_curve(self):
         tpr_list = []
-                
+
         for thres in self.probabilities_set:
             preds = self.make_predictions(thres)
             tp, _, _, fn = self.confusion_matrix(preds)
@@ -85,7 +85,7 @@ class Metrics:
     
     
     #Calculate AUK
-    def calc_auk(self):
+    def calc_auk(self):        
         auk=0
         fpr_list = self.fpr_curve()
         
@@ -103,9 +103,16 @@ class Metrics:
             y_dist = abs(kapp2-kapp1)
             top = (y_dist * x_dist)/2
             bottom = min(kapp1, kapp2)*x_dist
-            auk += top + bottom
+            auk += bottom
+            if self.integral == 'trapezoid':
+                top = (y_dist * x_dist)/2
+                auk += top
+            elif self.integral == 'max':
+                top = (y_dist * x_dist)
+                auk += top
+            else:
+                continue
         return auk
-       
        
     #Calculate roc-auc
     def calc_roc_auc(self):
@@ -126,7 +133,16 @@ class Metrics:
             y_dist = abs(tpr2-tpr1) 
             top = (y_dist * x_dist)/2
             bottom = x_dist * min(tpr1, tpr2)
-            roc_auc += top + bottom
+            roc_auc += bottom
+            
+            if self.integral == 'trapezoid':
+                top = (y_dist * x_dist)/2
+                roc_auc += top
+            elif self.integral == 'max':
+                top = (y_dist * x_dist)
+                roc_auc += top
+            else:
+                continue
         return roc_auc
     
     def calc_pr_auc(self):
@@ -147,15 +163,31 @@ class Metrics:
             y_dist = abs(precision2-precision1) 
             top = (y_dist * x_dist)/2
             bottom = x_dist * min(precision1, precision2)
-            pr_auc += top + bottom
+            pr_auc += bottom
+            
+            if self.integral == 'trapezoid':
+                top = (y_dist * x_dist)/2
+                pr_auc += top
+            elif self.integral == 'max':
+                top = (y_dist * x_dist)
+                pr_auc += top
+            else:
+                continue
+        return pr_auc
+
+            #The code below seems unnecessary now that I have added the extra areas in the curve
+        '''
+            if step is False:                    
+                top = (y_dist * x_dist)/2
+                pr_auc += top
         
-        
-        #add begin area before smallest probability     
-        preds = self.make_predictions(min(self.probabilities_set))
-        tp, _, fp, _ = self.confusion_matrix(preds)
-        precision = self.calc_precision(tp, fp)
-        begin = (precision*min(tpr_list))/2
-        pr_auc += begin
+        if step is False:
+            #add begin area before smallest probability  
+            preds = self.make_predictions(min(self.probabilities_set))
+            tp, _, fp, _ = self.confusion_matrix(preds)
+            precision = self.calc_precision(tp, fp)
+            begin = (precision*min(tpr_list))/2
+            pr_auc += begin
         
         #add end area after largest probability 
         preds=self.make_predictions(max(self.probabilities_set))
@@ -163,7 +195,6 @@ class Metrics:
         precision = self.calc_precision(tp, fp)
         y_diff = 1-precision
         x_diff= 1-max(tpr_list)
-        end_top = (y_diff)*(x_diff)/2
         end_bottom = precision * x_diff
         pr_auc += end_top + end_bottom
         return pr_auc
@@ -187,4 +218,19 @@ class Metrics:
         n_hat = fn + tn
         p_c = p * p_hat + n * n_hat
         return (acc - p_c) / (1 - p_c)    
+
+    #Add zero to appropriate position in list
+    def add_zero_to_curve(self, curve):
+        min_index = curve.index(min(curve)) 
+        if min_index> 0:
+            curve.append(0)
+        else: curve.insert(0,0)
+        return curve
     
+        #Add zero to appropriate position in list
+    def add_one_to_curve(self, curve):
+        max_index = curve.index(max(curve)) 
+        if max_index> 0:
+            curve.append(1)
+        else: curve.insert(0,1)
+        return curve
