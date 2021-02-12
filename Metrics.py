@@ -198,7 +198,7 @@ class Metrics:
         end_bottom = precision * x_diff
         pr_auc += end_top + end_bottom
         return pr_auc
-           
+           '''
         
     def calc_fpr(self, fp, tn):
         return fp/(fp+tn)
