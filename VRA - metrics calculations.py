@@ -74,7 +74,6 @@ svm['true_label'] = svm.true_label.apply(replace_labels)
 
 rows = ['ROC-AUC','PR-AUC','AUK']
 
-# It would have been better to use tfidf_i and svm_i, for consistency with rf
 colnames = ['BVC_begin', 'BVC_end',
         'tfidf1','tfidf2','tfidf3','tfidf4','tfidf5',
          'svm1', 'svm2', 'svm3', 'svm4', 'svm5',
@@ -87,7 +86,7 @@ colnames = ['BVC_begin', 'BVC_end',
 metrics = pd.DataFrame(columns = colnames, index = rows)
 
 #BVC
-bvc_labels_end = bvc.iloc[:,1] # I think it's safer to index by column name
+bvc_labels_end = bvc.iloc[:,1]
 bvc_labels_begin = bvc.iloc[:,2]
 bvc_probs = bvc.iloc[:,3]
 
@@ -96,7 +95,7 @@ bvc_end = create_variables(bvc_probs, bvc_labels_end)
 
 rows = [0,1,2]
 
-for r in rows: # Better for r in range(3)
+for r in rows:
     metrics.iloc[r,0] = bvc_begin[r]
     metrics.iloc[r,1] = bvc_end[r]
 
@@ -134,7 +133,6 @@ for i, model in enumerate(models):
         print('Model: ',str(i),', Fold: ',str(f))
     
         for r in rows:
-            # These shifts are very hacky. I think you should index by name
             metrics.iloc[r,f+2] = tf_idf_metrics[r]
             metrics.iloc[r,f+7] = svm_metrics[r]
             metrics.iloc[r,f+12] = rf1_metrics[r]
@@ -153,8 +151,6 @@ for i,model in enumerate(models):
     auk = []
     
     for f in folds:
-        # This is a bug waiting to happen. What if you don't write the shifts
-        # correctly?
         roc_auc.append(metrics.iloc[0,(i*5)+2+f])
         pr_auc.append(metrics.iloc[1,(i*5)+2+f])        
         auk.append(metrics.iloc[2,(i*5)+2+f])

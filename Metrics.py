@@ -37,7 +37,7 @@ class Metrics:
     #make list with fpr scores for each threshold
     def fpr_curve(self):
         fpr_list = []
-        
+
         for thres in self.probabilities_set:
             preds = self.make_predictions(thres)
             tp, tn, fp, fn = self.confusion_matrix(preds)
@@ -47,7 +47,7 @@ class Metrics:
     
     def tpr_curve(self):
         tpr_list = []
-               
+
         for thres in self.probabilities_set:
             preds = self.make_predictions(thres)
             tp, _, _, fn = self.confusion_matrix(preds)
@@ -188,13 +188,12 @@ class Metrics:
                 top = (y_dist * x_dist)/2
                 pr_auc += top
         
-        if step is False:
-            #add begin area before smallest probability  
-            preds = self.make_predictions(min(self.probabilities_set))
-            tp, _, fp, _ = self.confusion_matrix(preds)
-            precision = self.calc_precision(tp, fp)
-            begin = (precision*min(tpr_list))/2
-            pr_auc += begin
+        #add begin area before smallest probability     
+        preds = self.make_predictions(min(self.probabilities_set))
+        tp, _, fp, _ = self.confusion_matrix(preds)
+        precision = self.calc_precision(tp, fp)
+        begin = (precision*min(tpr_list))/2
+        pr_auc += begin
         
         #add end area after largest probability 
         preds=self.make_predictions(max(self.probabilities_set))
@@ -202,6 +201,7 @@ class Metrics:
         precision = self.calc_precision(tp, fp)
         y_diff = 1-precision
         x_diff= 1-max(tpr_list)
+        end_top = (y_diff)*(x_diff)/2
         end_bottom = precision * x_diff
         pr_auc += end_bottom
 
@@ -229,7 +229,6 @@ class Metrics:
         n_hat = fn + tn
         p_c = p * p_hat + n * n_hat
         return (acc - p_c) / (1 - p_c)    
-
     #Add zero to appropriate position in list
     def add_zero_to_curve(self, curve):
         min_index = curve.index(min(curve)) 
